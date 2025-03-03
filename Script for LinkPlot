@@ -1,0 +1,62 @@
+file_path <- "CitSci.xlsx"  
+df <- read_excel(file_path, sheet = 1)  # Read Excel
+
+View(df)
+
+group_A <- c("Population", "Land Area", "HDI", "Life Expectancy", "Years of schooling", "GNI per capita", "Inbound Tourists", "Endemics", "Species with small occurrence", "Number of total species")  # Перша група (немає кореляції між собою)
+group_B <- c("eBird  Species", "eBird Users", "Occurences from Cornell Lab on GBIF", "iNat General Observation", "iNat Observers", "iNat Identifiers", "iNat Species", "iNat Plant Species", "iNat Bird Species")  # Друга група (є внутрішня кореляція)
+
+# Select Variables
+df <- df %>% select(all_of(c(group_A, group_B)))
+
+cor_matrix <- cor(df, method = "pearson", use = "pairwise.complete.obs")
+
+# Correlation Matrix
+edges <- cor_matrix %>%
+  as.data.frame() %>%
+  rownames_to_column("from") %>%
+  pivot_longer(-from, names_to = "to", values_to = "weight") %>%
+  filter(from != to) 
+
+# Add points
+nodes <- data.frame(name = unique(c(edges$from, edges$to)))
+
+# Add all possible links
+edges_all <- expand.grid(from = nodes$name, to = nodes$name) %>%
+  filter(from != to) %>%
+  left_join(edges, by = c("from", "to")) %>%
+  mutate(weight = replace_na(weight, 0))  
+
+# 🔹 Delete low correlation < 0.5
+edges_filtered <- edges_all %>%
+  filter(!(from %in% group_A & to %in% group_A)) %>%
+  filter(abs(weight) >= 0.5) 
+
+# 🔹 Add line types
+edges_filtered <- edges_filtered %>%
+  mutate(edge_linetype = ifelse(abs(weight) >= 0.71, "longdash", "solid"))
+
+# Create graph
+graph <- graph_from_data_frame(edges_filtered, directed = FALSE, vertices = nodes)
+
+# Generate poins location
+layout_data <- create_layout(graph, layout = "circle")
+
+# Text out 
+layout_data <- layout_data %>%
+  mutate(x_ext = x * 1.2, y_ext = y * 1.2) 
+
+# Colors
+node_colors <- ifelse(V(graph)$name %in% group_A, "blue", "green")
+
+# Generation Linkplot
+ggraph(layout_data) +
+  geom_edge_link(aes(linetype = edge_linetype), color = "black", edge_width = 3) +  
+  geom_node_point(size = 12, color = node_colors) +  
+  geom_node_text(aes(x = x_ext, y = y_ext, label = name), 
+                 size = 14, fontface = "bold", color = "black") +  
+  theme_void() +  
+  theme(legend.position = "none") 
+
+
+
