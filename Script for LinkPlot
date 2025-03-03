@@ -1,3 +1,12 @@
+# Packages
+
+library(readxl)    
+library(tidyverse)  
+library(igraph)    
+library(ggraph)     
+library(tidygraph) 
+
+# Open Ecxel file
 file_path <- "CitSci.xlsx"  
 df <- read_excel(file_path, sheet = 1)  # Read Excel
 
