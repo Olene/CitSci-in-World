@@ -12,8 +12,8 @@ df <- read_excel(file_path, sheet = 1)  # Read Excel
 
 View(df)
 
-group_A <- c("Population", "Land Area", "HDI", "Life Expectancy", "Years of schooling", "GNI per capita", "Inbound Tourists", "Endemics", "Species with small occurrence", "Number of total species")  # Перша група (немає кореляції між собою)
-group_B <- c("eBird  Species", "eBird Users", "Occurences from Cornell Lab on GBIF", "iNat General Observation", "iNat Observers", "iNat Identifiers", "iNat Species", "iNat Plant Species", "iNat Bird Species")  # Друга група (є внутрішня кореляція)
+group_A <- c("Population", "Land Area", "HDI", "Life Expectancy", "Years of schooling", "GNI per capita", "Inbound Tourists", "Endemics", "Species with small occurrence", "Number of total species")  # First group (without internal correlation)
+group_B <- c("eBird  Species", "eBird Users", "Occurences from Cornell Lab on GBIF", "Occurences from Observation.org on GBIF","iNat General Observation", "iNat Observers", "iNat Identifiers", "iNat Species")  # Second group (with internal correlation)
 
 # Select Variables
 df <- df %>% select(all_of(c(group_A, group_B)))
