@@ -1,0 +1,58 @@
+# Install the corrplot package
+install.packages("corrplot")
+install.packages("readxl") 
+
+# Load the library
+library(corrplot)
+library(readxl) 
+
+# Open data
+file_path <- "CitSci.xlsx" 
+data <- read_excel(file_path, sheet = 1) 
+
+# Make data numeric
+numeric_data <- data[, sapply(data, function(x) is.numeric(x) || is.integer(x))]
+
+numeric_data <- data.frame(lapply(numeric_data, function(x) as.numeric(as.character(x))))
+
+str(numeric_data)
+colnames(numeric_data) <- gsub("\\.", " ", colnames(numeric_data))
+
+# Calculate p-value
+cor.mtest <- function(mat, ...) {
+  mat <- as.matrix(mat)
+  n <- ncol(mat)
+  p.mat <- matrix(NA, n, n)
+  colnames(p.mat) <- rownames(p.mat) <- colnames(mat)
+  for (i in 1:(n - 1)) {
+    for (j in (i + 1):n) {
+      test <- cor.test(mat[, i], mat[, j], ...)
+      p.mat[i, j] <- p.mat[j, i] <- test$p.value
+    }
+  }
+  p.mat
+}
+
+# Compute the correlation matrix and p-value
+cor_matrix <- cor(numeric_data, use = "complete.obs")
+p_matrix <- cor.mtest(numeric_data)
+
+# Generate the plot
+corrplot(
+  cor_matrix,
+  method = "circle",
+  type = "lower",
+  p.mat = p_matrix,
+  sig.level = 0.05,      # Only show significant correlations
+  insig = "blank",       # Blank insignificant correlations (or try "pch", "label")
+  tl.cex = 0.8,
+  tl.font = 2,
+  tl.col = "black",
+  tl.srt = 45,
+  diag = FALSE,
+  cl.cex = 0.8,
+  addCoef.col = 1,
+  number.cex = 0.4,
+  number.digits = 1,
+  col = colorRampPalette(c("red", "white", "blue"))(200)
+)
